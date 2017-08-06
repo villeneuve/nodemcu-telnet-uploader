@@ -1,4 +1,4 @@
-#!/usr/bin/expect #Where the script should be run from.
+#!/usr/bin/expect -f
 #If it all goes pear shaped the script will timeout after 20 seconds.
 set timeout 20
 #First argument is assigned to the variable ip
@@ -20,7 +20,10 @@ spawn telnet $ip $port
 #expect "Connected to $ip."
 expect "Escape character is '^]'."
 sleep 1
-send "if true == file.open(\"$remotefilename\", \"w+\") then \r"
+# Modif Guy. Try: change w+ to a+ on file open and send file by smaller blocks
+# + file.open() doesn't return true or false anymore but an object
+# send "if true == file.open(\"$remotefilename\", \"w+\") then \r"
+send "if nil ~= file.open(\"$remotefilename\", \"a+\") then \r"
 expect ">>"
 send "print(\"ok\")\r"
 expect ">>"
@@ -40,6 +43,10 @@ foreach line $data {
 		  expect ">>"
 		  send "end\r"
 		  expect "ok"
+          # Modif Guy flush on each line to avoid lost on big files
+          # send "file.flush()\r"   
+          # the next expect ">" is on top of loop
+          # doesn't work. Try change w+ to a+ on file open and send file by smaller blocks
 }
 expect ">"
 send "file.flush()\r"
@@ -51,4 +58,4 @@ expect "done"
 sleep 1
 close
 #This hands control of the keyboard over two you (Nice expect feature!)
-#interact 
+#interact
